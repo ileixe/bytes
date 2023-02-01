@@ -813,6 +813,20 @@ impl BytesMut {
         }
     }
 
+    #[inline]
+    pub fn from_ptr(ptr: *mut u8, len: usize, cap: usize) -> BytesMut {
+        let ptr = vptr(ptr);
+        let original_capacity_repr = original_capacity_to_repr(cap);
+        let data = (original_capacity_repr << ORIGINAL_CAPACITY_OFFSET) | KIND_VEC;
+
+        BytesMut {
+            ptr,
+            len,
+            cap,
+            data: invalid_ptr(data),
+        }
+    }
+
     // private
 
     // For now, use a `Vec` to manage the memory for us, but we may want to
@@ -822,7 +836,7 @@ impl BytesMut {
     // internal change could make a simple pattern (`BytesMut::from(vec)`)
     // suddenly a lot more expensive.
     #[inline]
-    pub(crate) fn from_vec(mut vec: Vec<u8>) -> BytesMut {
+    pub fn from_vec(mut vec: Vec<u8>) -> BytesMut {
         let ptr = vptr(vec.as_mut_ptr());
         let len = vec.len();
         let cap = vec.capacity();
